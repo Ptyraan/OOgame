@@ -16,6 +16,7 @@ boolean walking = false;
 int legDirection = 1;
 PImage troll;
 PImage gun;
+PImage fire;
 
 void setup() {
   fullScreen(P2D);
@@ -183,5 +184,6 @@ void loadShell() {
 }
 
 void fire() {
-
+  pushMatrix();
+  popMatrix();
 }
