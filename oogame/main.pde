@@ -1,5 +1,5 @@
 int lives = 3;
-int ammo = 0;
+int ammo = 2;
 boolean reload = true;
 boolean ADS = false;
 PVector pos = new PVector(0, 0);
@@ -14,6 +14,11 @@ int sprite = 1;
 int animateBy = 7;
 boolean walking = false;
 int legDirection = 1;
+boolean firing = false;
+int fireAni = 0;
+PVector firePos;
+float fireAngle;
+int fireCD = 0;
 PImage troll;
 PImage gun;
 PImage fire;
@@ -85,12 +90,48 @@ void draw() {
   translate(-pos.x, -pos.y);
   ellipse(0, 0, 100, 100);
   popMatrix();
+  
+  // fire effect
+  if (firing) {
+    pushMatrix();
+    if (ADS) {
+      translate(width/2, height/2-20);
+    } else {
+      translate(width/2, height/2);
+    }
+    if (ADS) {
+      if (mouseX > width/2) {
+        rotate(-atan2(mouseX - width/2, mouseY+30 - height/2) + PI/2);
+      } else {
+        scale(-1, 1);
+        rotate(atan2(mouseX - width/2, mouseY+30 - height/2) + PI/2);
+      }
+    } else {
+      if (mouseX > width/2) {
+        rotate(-atan2(mouseX - width/2, mouseY+10 - height/2) + PI/2);
+      } else {
+        scale(-1, 1);
+        rotate(atan2(mouseX - width/2, mouseY+10 - height/2) + PI/2);
+      }
+    }
+    fire = loadImage("sprites/fire" + int(fireAni/3) + ".png");
+    image(fire, 50, -177);
+    popMatrix();
+    fireAni += 1;
+    if (fireAni == 16) {
+      firing = false;
+      fireAni = 0;
+    }
+  }
+  if (fireCD > 0) fireCD -= 1;
   walkCycle();
+
 }
 
 void keyPressed() {
   if (key == 'r') {
     reload = !reload;
+    ADS = false;
   }
   if (key == 'w') {
     up = true;
@@ -161,10 +202,15 @@ void walkCycle() {
 
 void mousePressed() {
   if (mouseButton == 37) {
+    print("ammo: " + ammo + "\n");
+    print("attempting to fire...\n");
+    print("fire cooldown: " + fireCD + "\n");
     if (reload) {
       loadShell();
-    } else {
-      fire();
+    } else if (fireCD == 0) {
+      firing = true;
+      fireCD = 5;
+      
     }
   } else if (mouseButton == 39 && !reload) {
     ADS = true;
@@ -181,9 +227,4 @@ void loadShell() {
   if (ammo < 2) {
     ammo += 1;
   }
-}
-
-void fire() {
-  pushMatrix();
-  popMatrix();
 }
