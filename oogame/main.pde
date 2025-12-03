@@ -94,6 +94,11 @@ void draw() {
   // fire effect
   if (firing) {
     pushMatrix();
+    // lock rotation
+    if (fireCD == 15) {
+      
+    }
+    
     if (ADS) {
       translate(width/2, height/2-20);
     } else {
@@ -122,9 +127,12 @@ void draw() {
       firing = false;
       fireAni = 0;
     }
+  } else {
+    walkCycle();
+    // PUT EVERYTHING ELSE HERE
   }
   if (fireCD > 0) fireCD -= 1;
-  walkCycle();
+  
 
 }
 
@@ -209,7 +217,7 @@ void mousePressed() {
       loadShell();
     } else if (fireCD == 0) {
       firing = true;
-      fireCD = 5;
+      fireCD = 15;
       
     }
   } else if (mouseButton == 39 && !reload) {
