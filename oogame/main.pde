@@ -1,3 +1,11 @@
+int gamestate = 0;
+/* gamestate index
+ 0 menu
+ 1 game
+ 2 win
+ 3 lose
+*/
+
 int lives = 3;
 int ammo = 2;
 boolean reload = true;
@@ -44,7 +52,7 @@ PImage house;
 
 int chunks = 1;
 void setup() {
-  fullScreen(P2D);
+  size(1920, 1080, P2D);
   pixelDensity(1);
   frameRate(60);
   shell = loadImage("sprites/ammo.png");
@@ -349,7 +357,8 @@ void mousePressed() {
       firing = true;
       fireCD = 15;
       ammo -= 1;
-      muzzleFlash = 255;
+      muzzleFlash = 320;
+      dispersion = 0;
     }
   } else if (mouseButton == 39 && !reload) {
     ADS = true;
