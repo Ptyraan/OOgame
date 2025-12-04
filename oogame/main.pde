@@ -43,6 +43,7 @@ void setup() {
   barrel = loadImage("sprites/ammocounter.png");
   road = loadImage("sprites/road.png");
   barricade = loadImage("sprites/barricade.png");
+  house = loadImage("sprites/house.png");
 }
 
 
@@ -75,6 +76,7 @@ void draw() {
   for (float x = 0; x < chunks; x++) {
     image(road, x*3840, 0);
   }
+  image(house, 537, -862);
   image(barricade, 796, -30);
   image(barricade, 803, 250);
   image(barricade, 800, 570);
@@ -118,7 +120,6 @@ void draw() {
   // literally everything else
   pushMatrix();
   translate(-pos.x, -pos.y);
-  ellipse(0, 0, 100, 100);
   popMatrix();
   
   // fire effect
