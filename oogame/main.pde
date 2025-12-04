@@ -151,9 +151,12 @@ void draw() {
   testEnemy.bullets[0].display();
   testEnemy.bullets[1].display();
   testEnemy.bullets[2].display();
-  //testEnemy.bullets[0].fly();
-  //testEnemy.bullets[1].fly();
-  //testEnemy.bullets[2].fly();
+  testEnemy.bullets[0].fly();
+  testEnemy.bullets[1].fly();
+  testEnemy.bullets[2].fly();
+  //print("bullet 0 at " + testEnemy.bullets[0].bpos.x + ", " + testEnemy.bullets[0].bpos.y + " flying " + testEnemy.bullets[0].v.x + ", " + testEnemy.bullets[0].v.y + "\n");
+  //print("bullet 1 at " + testEnemy.bullets[1].bpos.x + ", " + testEnemy.bullets[1].bpos.y + " flying " + testEnemy.bullets[1].v.x + ", " + testEnemy.bullets[1].v.y + "\n");
+  //print("bullet 2 at " + testEnemy.bullets[2].bpos.x + ", " + testEnemy.bullets[2].bpos.y + " flying " + testEnemy.bullets[2].v.x + ", " + testEnemy.bullets[2].v.y + "\n");
   popMatrix();
   
   // fire effect

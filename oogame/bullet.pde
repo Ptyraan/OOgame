@@ -9,8 +9,7 @@ class bullet{
   }
   
   void fly() {
-    bpos.x += v.x;
-    bpos.y += v.y;
+    bpos = new PVector(bpos.x+v.x, bpos.y+v.y);
   }
   
   boolean hit(PVector tgt) {

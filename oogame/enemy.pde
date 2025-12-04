@@ -5,6 +5,7 @@ class enemy {
   int stun;
   int CD;
   int wait;
+  int shot = 0;
   bullet[] bullets = new bullet[3];
   
   enemy(PVector tpos) {
@@ -47,17 +48,32 @@ class enemy {
   }
   
   void fire(PVector tgt) {
+    PVector aim = new PVector(tgt.x - epos.x, tgt.y, - epos.y);
+    stroke(#FF0000);
+    line(tgt.x, tgt.y, epos.x, epos.y);
+    aim.normalize();
+    aim.mult(6);
+    PVector velocity = new PVector(aim.x, aim.y);
+    line(epos.x, epos.y, aim.x*dist(tgt.x, tgt.y, epos.x, epos.y)/6, aim.y*dist(tgt.x, tgt.y, epos.x, epos.y)/6);
+    
     if (stun == 0 && (CD == 0 || CD > 180) && dist(tgt.x, tgt.y, epos.x, epos.y) < 450) {
       if (CD == 0) {
         CD = 240;
         wait = 15;
+      } else if (CD == 45) {
+        bullets[0].deactivate();
+      } else if (CD == 30) {
+        bullets[1].deactivate();
+      } else if (CD == 15) {
+        bullets[2].deactivate();
       }
-      int shot = 0;
       if (wait == 0 & shot < 3) {
         wait = 15;
-        PVector aim = new PVector(tgt.x - epos.x, tgt.y, - epos.y);
-        bullets[shot] = new bullet (epos, new PVector(3*aim.normalize().x, 3*aim.normalize().y));
+        
+        bullets[shot] = new bullet (epos, new PVector(velocity.x, velocity.y));
         shot +=1;
+      } else if (shot == 3) {
+        shot = 0;
       }
     }
     wait -= 1;
