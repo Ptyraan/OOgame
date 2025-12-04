@@ -2,7 +2,7 @@ int lives = 3;
 int ammo = 2;
 boolean reload = true;
 boolean ADS = false;
-PVector pos = new PVector(0, 0);
+PVector pos = new PVector(0, -460);
 float speed = 5;
 
 boolean up = false;
@@ -30,17 +30,24 @@ PImage barrel;
 PImage shell;
 PImage gunUI;
 
+PImage road;
+PImage barricade;
+PImage house;
+
+int chunks = 1;
 void setup() {
   fullScreen(P2D);
   pixelDensity(1);
   frameRate(60);
   shell = loadImage("sprites/ammo.png");
   barrel = loadImage("sprites/ammocounter.png");
+  road = loadImage("sprites/road.png");
+  barricade = loadImage("sprites/barricade.png");
 }
 
 
 void draw() {
-  background(100);
+  background(#060B34);
   if (sprite > 1) sprite -= 2;
   if (sprite < 0) sprite = 0;
   // inconsistent input gets it out of bounds, this is the more efficient fix
@@ -61,6 +68,18 @@ void draw() {
     gun = loadImage("sprites/gun.png");
   }
   
+  // map
+  pushMatrix();
+  translate(-pos.x, -pos.y);
+  if (pos.x > chunks*3840-1920) chunks += 1;
+  for (float x = 0; x < chunks; x++) {
+    image(road, x*3840, 0);
+  }
+  image(barricade, 796, -30);
+  image(barricade, 803, 250);
+  image(barricade, 800, 570);
+  image(barricade, 797, 900);
+  popMatrix();
   
   // troll matrix
   pushMatrix();
@@ -241,6 +260,10 @@ void walkCycle() {
     nextFramePos.x += mod*speed;
   }
   
+  if (nextFramePos.y < -460) nextFramePos.y = -460;
+  if (nextFramePos.y > 563) nextFramePos.y = 563;
+  if (nextFramePos.x < 0) nextFramePos.x = 0;
+  
   float deltaX = nextFramePos.x - pos.x;
   float deltaY = nextFramePos.y - pos.y;
   if (deltaX*deltaX + deltaY*deltaY > 0) {
@@ -256,6 +279,7 @@ void walkCycle() {
   } else {
     sprite = 1;
   }
+
   pos = nextFramePos;
 }
 
@@ -266,7 +290,7 @@ void mousePressed() {
     print("attempting to fire...\n");
     print("fire cooldown: " + fireCD + "\n");
     */
-    println(mouseX, mouseY);
+    println(pos.x, pos.y);
     if (reload) {
       loadShell();
     } else if (fireCD == 0 && ammo > 0) {
