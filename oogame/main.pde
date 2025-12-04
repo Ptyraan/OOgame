@@ -23,6 +23,8 @@ int fireCD = 0;
 PVector tgt;
 float rotation1 = random(0, 2*PI);
 float rotation2 = random(0, 2*PI);
+int expression = 0;
+int duration;
 
 PImage troll;
 PImage gun;
@@ -32,6 +34,7 @@ PImage shell;
 PImage gunUI;
 PImage flavour;
 PImage flavourText;
+PImage portrait;
 
 PImage road;
 PImage barricade;
@@ -49,6 +52,7 @@ void setup() {
   house = loadImage("sprites/house.png");
   flavour = loadImage("sprites/flavour.png");
   flavourText = loadImage("sprites/flavour0.png");
+  portrait = loadImage("sprites/portrait" + expression + ".png");
 }
 
 
@@ -209,12 +213,26 @@ void draw() {
   } else {
     gunUI = loadImage("sprites/closed.png");
   }
-  image(gunUI, 967, 759);
+  image(gunUI, 927, 759);
   if (fireCD > 0) fireCD -= 1;
   
   image(flavour, 0, 0);
+  
+  // note to self loading a 1080p image every frame is not a very good idea
   if(frameCount%300 == 0) flavourText = loadImage("sprites/flavour" + int(frameCount%900/300) + ".png");
   image(flavourText, 0, 0);
+  portrait = loadImage("sprites/portrait" + expression + ".png");
+  image(portrait, 1529, 884);
+  if (duration != 0) {
+    duration -= 1;
+  } else if (reload) {
+    expression = 1;
+  } else if (ADS) {
+    expression = 4;
+  } else {
+    expression = 0;
+  }
+  println(duration);
 }
 
 void keyPressed() {
@@ -222,8 +240,16 @@ void keyPressed() {
     reload = !reload;
     if (reload) {
       ADS = false;
-    } else if (held) {
-      ADS = true;
+      expression = 1;
+      duration = -1;
+    } else {
+      expression = 0;
+      duration = 0;
+      if (held) {
+        ADS = true;
+        expression = 4;
+        duration = -1;
+      }
     }
   }
   if (key == 'w') {
@@ -305,7 +331,7 @@ void mousePressed() {
     print("attempting to fire...\n");
     print("fire cooldown: " + fireCD + "\n");
     */
-    println(mouseX, mouseY);
+    //println(mouseX, mouseY);
     if (reload) {
       loadShell();
     } else if (fireCD == 0 && ammo > 0) {
@@ -317,6 +343,8 @@ void mousePressed() {
   } else if (mouseButton == 39 && !reload) {
     ADS = true;
     held = true;
+    expression = 4;
+    duration = -1;
   }
 }
 
@@ -324,6 +352,13 @@ void mouseReleased() {
   if (mouseButton == 39) {
     ADS = false;
     held = false;
+    if (reload) {
+      expression = 1;
+      duration = -1;
+    } else {
+      expression = 0;
+      duration = 0;
+    }
   }
 }
 
@@ -331,8 +366,12 @@ void loadShell() {
   if (ammo == 0) {
     ammo += 1;
     rotation1 = random(0, 2*PI);
+    expression = 2;
+    duration = 30;
   } else if (ammo == 1) {
     ammo += 1;
     rotation2 = random(0, 2*PI);
+    expression = 3;
+    duration = 30;
   }
 }
