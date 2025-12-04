@@ -2,6 +2,7 @@ int lives = 3;
 int ammo = 2;
 boolean reload = true;
 boolean ADS = false;
+boolean held = false;
 PVector pos = new PVector(0, -460);
 float speed = 5;
 
@@ -189,16 +190,16 @@ void draw() {
   
   // UI
   imageMode(CENTER);
-  image(barrel, 1654, 244);
+  image(barrel, 693, 876);
   pushMatrix();
   // -54.6 +11.2
-  translate(1599.4, 255.2);
+  translate(693-54.9, 876+11.2);
   rotate(rotation1);
   if (ammo > 0) image(shell, 0, 0);
   popMatrix();
   pushMatrix();
   // +51.9 +11.2
-  translate(1705.9, 255.2);
+  translate(693+51.9, 876+11.2);
   rotate(rotation2);
   if (ammo > 1) image(shell, 0, 0);
   popMatrix();
@@ -219,7 +220,11 @@ void draw() {
 void keyPressed() {
   if (key == 'r') {
     reload = !reload;
-    ADS = false;
+    if (reload) {
+      ADS = false;
+    } else if (held) {
+      ADS = true;
+    }
   }
   if (key == 'w') {
     up = true;
@@ -311,12 +316,14 @@ void mousePressed() {
     }
   } else if (mouseButton == 39 && !reload) {
     ADS = true;
+    held = true;
   }
 }
 
 void mouseReleased() {
   if (mouseButton == 39) {
     ADS = false;
+    held = false;
   }
 }
 
