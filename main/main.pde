@@ -6,6 +6,8 @@ int gamestate = 0;
  3 lose
 */
 
+// test comment
+
 int lives = 3;
 int ammo = 2;
 boolean reload = true;
