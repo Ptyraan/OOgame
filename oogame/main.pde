@@ -25,6 +25,8 @@ float rotation1 = random(0, 2*PI);
 float rotation2 = random(0, 2*PI);
 int expression = 0;
 int duration;
+int muzzleFlash = 0;
+int dispersion = 0;
 
 PImage troll;
 PImage gun;
@@ -232,7 +234,16 @@ void draw() {
   } else {
     expression = 0;
   }
-  println(duration);
+  fill(#FEFFF5, muzzleFlash);
+  stroke(#FEFFF5, muzzleFlash);
+  rect(1528, 883, 373, 178);
+  if (muzzleFlash > 0) {
+    muzzleFlash -= dispersion;
+    dispersion += 1;
+  } else {
+    muzzleFlash = 0;
+    dispersion = 0;
+  }
 }
 
 void keyPressed() {
@@ -331,14 +342,14 @@ void mousePressed() {
     print("attempting to fire...\n");
     print("fire cooldown: " + fireCD + "\n");
     */
-    //println(mouseX, mouseY);
+    println(mouseX, mouseY);
     if (reload) {
       loadShell();
     } else if (fireCD == 0 && ammo > 0) {
       firing = true;
       fireCD = 15;
       ammo -= 1;
-      
+      muzzleFlash = 255;
     }
   } else if (mouseButton == 39 && !reload) {
     ADS = true;
