@@ -14,6 +14,7 @@ boolean held = false;
 PVector pos = new PVector(0, -460);
 float speed = 5;
 
+
 boolean up = false;
 boolean down = false;
 boolean left = false;
@@ -51,6 +52,9 @@ PImage barricade;
 PImage house;
 
 int chunks = 1;
+int count = 0;
+enemy[] enemies = new enemy[256];
+
 void setup() {
   size(1920, 1080, P2D);
   pixelDensity(1);
@@ -139,7 +143,11 @@ void draw() {
   popMatrix();
   // literally everything else
   pushMatrix();
-  translate(-pos.x, -pos.y);
+  translate(-pos.x+width/2, -pos.y+height/2);
+  testBullet.display();
+  if (testBullet.hit(pos)) {
+    ellipse(pos.x, pos.y, 50, 50);
+  }
   popMatrix();
   
   // fire effect
@@ -252,6 +260,9 @@ void draw() {
     muzzleFlash = 0;
     dispersion = 0;
   }
+  
+  print("pos: " + pos.x + ", " + pos.y + "\n");
+  print("bullet: " + testBullet.pos.x + ", " + testBullet.pos.y + "\n");
 }
 
 void keyPressed() {
