@@ -11,7 +11,7 @@ int ammo = 2;
 boolean reload = true;
 boolean ADS = false;
 boolean held = false;
-PVector pos = new PVector(0, -460);
+PVector pos = new PVector(230, -460);
 float speed = 5;
 
 
@@ -54,6 +54,7 @@ PImage house;
 int chunks = 1;
 int count = 0;
 enemy[] enemies = new enemy[256];
+enemy testEnemy = new enemy(new PVector(400, -60));
 
 void setup() {
   size(1920, 1080, P2D);
@@ -144,10 +145,15 @@ void draw() {
   // literally everything else
   pushMatrix();
   translate(-pos.x+width/2, -pos.y+height/2);
-  testBullet.display();
-  if (testBullet.hit(pos)) {
-    ellipse(pos.x, pos.y, 50, 50);
-  }
+  testEnemy.display();
+  testEnemy.move(pos);
+  testEnemy.fire(pos);
+  testEnemy.bullets[0].display();
+  testEnemy.bullets[1].display();
+  testEnemy.bullets[2].display();
+  //testEnemy.bullets[0].fly();
+  //testEnemy.bullets[1].fly();
+  //testEnemy.bullets[2].fly();
   popMatrix();
   
   // fire effect
@@ -260,9 +266,6 @@ void draw() {
     muzzleFlash = 0;
     dispersion = 0;
   }
-  
-  print("pos: " + pos.x + ", " + pos.y + "\n");
-  print("bullet: " + testBullet.pos.x + ", " + testBullet.pos.y + "\n");
 }
 
 void keyPressed() {
