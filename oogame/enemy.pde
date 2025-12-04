@@ -48,14 +48,7 @@ class enemy {
   }
   
   void fire(PVector tgt) {
-    PVector aim = new PVector(tgt.x - epos.x, tgt.y, - epos.y);
     stroke(#FF0000);
-    line(tgt.x, tgt.y, epos.x, epos.y);
-    aim.normalize();
-    aim.mult(6);
-    PVector velocity = new PVector(aim.x, aim.y);
-    line(epos.x, epos.y, aim.x*dist(tgt.x, tgt.y, epos.x, epos.y)/6, aim.y*dist(tgt.x, tgt.y, epos.x, epos.y)/6);
-    
     if (stun == 0 && (CD == 0 || CD > 180) && dist(tgt.x, tgt.y, epos.x, epos.y) < 450) {
       if (CD == 0) {
         CD = 240;
@@ -69,14 +62,20 @@ class enemy {
       }
       if (wait == 0 & shot < 3) {
         wait = 15;
+        PVector aim = new PVector(tgt.x - epos.x, tgt.y - epos.y);
+        bullets[shot] = new bullet(epos, aim.normalize().mult(6));
         
-        bullets[shot] = new bullet (epos, new PVector(velocity.x, velocity.y));
         shot +=1;
+        
       } else if (shot == 3) {
         shot = 0;
       }
     }
+
     wait -= 1;
     if (CD>0) CD -= 1;
+    
+    
+
   }
 }

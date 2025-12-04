@@ -367,7 +367,7 @@ void mousePressed() {
     print("attempting to fire...\n");
     print("fire cooldown: " + fireCD + "\n");
     */
-    println(mouseX, mouseY);
+    //println(mouseX, mouseY);
     if (reload) {
       loadShell();
     } else if (fireCD == 0 && ammo > 0) {
