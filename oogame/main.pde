@@ -29,6 +29,8 @@ PImage fire;
 PImage barrel;
 PImage shell;
 PImage gunUI;
+PImage flavour;
+PImage flavourText;
 
 PImage road;
 PImage barricade;
@@ -44,6 +46,8 @@ void setup() {
   road = loadImage("sprites/road.png");
   barricade = loadImage("sprites/barricade.png");
   house = loadImage("sprites/house.png");
+  flavour = loadImage("sprites/flavour.png");
+  flavourText = loadImage("sprites/flavour0.png");
 }
 
 
@@ -83,12 +87,13 @@ void draw() {
   image(barricade, 797, 900);
   popMatrix();
   
+  //-242 -109 if possible
   // troll matrix
   pushMatrix();
   if (tgt.x < width/2) {
     scale(-1, 1);
     translate(-width, 0);
-  };
+  }
   imageMode(CENTER);
   image(troll, width/2-15, height/2-5);
   // gun matrix (inside troll matrix)
@@ -184,14 +189,16 @@ void draw() {
   
   // UI
   imageMode(CENTER);
-  image(barrel, 740, 700);
+  image(barrel, 1654, 244);
   pushMatrix();
-  translate(685.4, 711.2);
+  // -54.6 +11.2
+  translate(1599.4, 255.2);
   rotate(rotation1);
   if (ammo > 0) image(shell, 0, 0);
   popMatrix();
   pushMatrix();
-  translate(791.9, 711.3);
+  // +51.9 +11.2
+  translate(1705.9, 255.2);
   rotate(rotation2);
   if (ammo > 1) image(shell, 0, 0);
   popMatrix();
@@ -201,10 +208,12 @@ void draw() {
   } else {
     gunUI = loadImage("sprites/closed.png");
   }
-  image(gunUI, 888, 610);
+  image(gunUI, 967, 759);
   if (fireCD > 0) fireCD -= 1;
   
-
+  image(flavour, 0, 0);
+  if(frameCount%300 == 0) flavourText = loadImage("sprites/flavour" + int(frameCount%900/300) + ".png");
+  image(flavourText, 0, 0);
 }
 
 void keyPressed() {
@@ -291,7 +300,7 @@ void mousePressed() {
     print("attempting to fire...\n");
     print("fire cooldown: " + fireCD + "\n");
     */
-    println(pos.x, pos.y);
+    println(mouseX, mouseY);
     if (reload) {
       loadShell();
     } else if (fireCD == 0 && ammo > 0) {
