@@ -18,7 +18,7 @@ class enemy {
     engaging = false;
     HP = 2;
     stun = 0;
-    CD = 0;
+    CD = int(random(60, 180));
     wait = -1;
     shot = 0;
     vfx = 0;
@@ -52,6 +52,38 @@ class enemy {
       if (epos.x < 0) epos.x = 0;
       if (epos.y < -460) epos.y = -460;
       if (epos.y > 563) epos.y = 563;
+      
+      if (epos.x > tpos && epos.x < tpos + 1134 && epos.y > -320 && epos.y < 270) {
+        if (abs(epos.x - tpos) < abs(epos.x - (tpos + 1134))) {
+          if (abs(epos.y - -320) < abs (epos.y - 270)) {
+            if (abs(epos.x - tpos) < abs(epos.y - -320)) {
+              epos.x = tpos;
+            } else {
+              epos.y = -320;
+            }
+          } else {
+            if (abs(epos.x - tpos) < abs(epos.y - 270)) {
+              epos.x = tpos;
+            } else {
+              epos.y = 270;
+            }
+          }
+        } else {
+          if (abs(epos.y - -320) < abs (epos.y - 270)) {
+            if (abs(epos.x - (tpos + 1134)) < abs(epos.y - -320)) {
+              epos.x = tpos + 1134;
+            } else {
+              epos.y = -320;
+            }
+          } else {
+            if (abs(epos.x - (tpos + 1134)) < abs(epos.y - 270)) {
+              epos.x = tpos + 1134;
+            } else {
+              epos.y = 270;
+            }
+          }
+        }
+      }
     }
     if (stun > 0) stun--;
   }
@@ -91,7 +123,7 @@ class enemy {
   void fire(PVector tgt) {
     if (HP > 0 && stun == 0) {
       stroke(#FF0000);
-      if (stun == 0 && (CD == 0 || CD > 180) && dist(tgt.x, tgt.y, epos.x, epos.y - 20) < 450) {
+      if (stun == 0 && (CD == 0 || CD > 180) && dist(tgt.x, tgt.y, epos.x, epos.y - 20) < 750) {
         if (CD == 0) {
           CD = 240;
           wait = 15;
