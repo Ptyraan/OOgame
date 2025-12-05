@@ -1,9 +1,14 @@
-int gamestate = 0;
+int gamestate = 2;
+int winCountdown = 300;
+int loseCountdown = 120;
+int win = 0;
+int lose = 0;
 /* gamestate index
  0 menu
- 1 game
- 2 win
- 3 lose
+ 1 instructions
+ 2 game
+ 3 win
+ 4 lose
 */
 
 int lives = 3;
@@ -13,7 +18,6 @@ boolean ADS = false;
 boolean held = false;
 PVector pos = new PVector(230, -460);
 float speed = 5;
-
 
 boolean up = false;
 boolean down = false;
@@ -46,15 +50,20 @@ PImage gunUI;
 PImage flavour;
 PImage flavourText;
 PImage portrait;
+PImage preview;
 
 PImage road;
 PImage barricade;
 PImage house;
 
+PImage[] enemySprites = new PImage[3];
+PImage enemyGun;
+PImage critMarker;
+PImage hitMarker;
+
 int chunks = 1;
 int count = 0;
-enemy[] enemies = new enemy[256];
-enemy testEnemy = new enemy(new PVector(400, -60));
+enemy[] enemies = new enemy[999];
 
 void setup() {
   size(1920, 1080, P2D);
@@ -68,207 +77,286 @@ void setup() {
   flavour = loadImage("sprites/flavour.png");
   flavourText = loadImage("sprites/flavour0.png");
   portrait = loadImage("sprites/portrait" + expression + ".png");
+  for (int i = 0; i < 3; i++) {
+    enemySprites[i] = loadImage("sprites/enemy" + i + ".png");
+    
+  }
+  enemyGun = loadImage("sprites/enemygun.png");
+  preview = loadImage("sprites/ADS.png");
+  critMarker = loadImage("sprites/critmarker.png");
+  hitMarker = loadImage("sprites/hitmarker.png");
 }
 
 
 void draw() {
-  background(#060B34);
-  if (sprite > 1) sprite -= 2;
-  if (sprite < 0) sprite = 0;
-  // inconsistent input gets it out of bounds, this is the more efficient fix
+  if (gamestate == 0) {
   
-  if (!firing) tgt = new PVector(mouseX, mouseY);
+  } else if (gamestate == 1) {
   
-  if (ADS) {
-    sprite += 2;
-    while(sprite > 3){
-      sprite -= 2;
+  } else if (gamestate == 2) {
+    background(#060B34);
+    if (sprite > 1) sprite -= 2;
+    if (sprite < 0) sprite = 0;
+    // inconsistent input gets it out of bounds, this is the more efficient fix
+    
+    if (!firing && lose == 0) tgt = new PVector(mouseX, mouseY);
+    
+    if (ADS) {
+      sprite += 2;
+      while(sprite > 3){
+        sprite -= 2;
+      }
     }
-  }
-  
-  troll = loadImage("sprites/troll" + sprite + ".png");
-  if (reload) {
-    gun = loadImage("sprites/gun_open.png");
-  } else {
-    gun = loadImage("sprites/gun.png");
-  }
-  
-  // map
-  pushMatrix();
-  translate(-pos.x, -pos.y);
-  if (pos.x > chunks*3840-1920) chunks += 1;
-  for (float x = 0; x < chunks; x++) {
-    image(road, x*3840, 0);
-  }
-  image(house, 537, -862);
-  image(barricade, 796, -30);
-  image(barricade, 803, 250);
-  image(barricade, 800, 570);
-  image(barricade, 797, 900);
-  popMatrix();
-  
-  //-242 -109 if possible
-  // troll matrix
-  pushMatrix();
-  if (tgt.x < width/2) {
-    scale(-1, 1);
-    translate(-width, 0);
-  }
-  imageMode(CENTER);
-  image(troll, width/2-15, height/2-5);
-  // gun matrix (inside troll matrix)
-  pushMatrix();
-  if (ADS) {
-    translate(width/2, height/2-20);
-  } else {
-    translate(width/2, height/2);
-  }
-  
-  if (ADS) {
-        if (tgt.x > width/2) {
-      rotate(-atan2(tgt.x - width/2, tgt.y+30 - height/2) + 2*PI/180);
+    
+    troll = loadImage("sprites/troll" + sprite + ".png");
+    if (reload) {
+      gun = loadImage("sprites/gun_open.png");
     } else {
-      rotate(atan2(tgt.x - width/2, tgt.y+30 - height/2) + 2*PI/180);
+      gun = loadImage("sprites/gun.png");
     }
-  } else {
-    if (tgt.x > width/2) {
-      rotate(-atan2(tgt.x - width/2, tgt.y+10 - height/2) + 2*PI/180);
-    } else {
-      rotate(atan2(tgt.x - width/2, tgt.y+10 - height/2) + 2*PI/180);
-    }
-  }
-  
-  image(gun, 0, 0);
-  popMatrix();
-  imageMode(CORNER);
-  popMatrix();
-  // literally everything else
-  pushMatrix();
-  translate(-pos.x+width/2, -pos.y+height/2);
-  testEnemy.display();
-  testEnemy.move(pos);
-  testEnemy.fire(pos);
-  testEnemy.bullets[0].display();
-  testEnemy.bullets[1].display();
-  testEnemy.bullets[2].display();
-  testEnemy.bullets[0].fly();
-  testEnemy.bullets[1].fly();
-  testEnemy.bullets[2].fly();
-  //print("bullet 0 at " + testEnemy.bullets[0].bpos.x + ", " + testEnemy.bullets[0].bpos.y + " flying " + testEnemy.bullets[0].v.x + ", " + testEnemy.bullets[0].v.y + "\n");
-  //print("bullet 1 at " + testEnemy.bullets[1].bpos.x + ", " + testEnemy.bullets[1].bpos.y + " flying " + testEnemy.bullets[1].v.x + ", " + testEnemy.bullets[1].v.y + "\n");
-  //print("bullet 2 at " + testEnemy.bullets[2].bpos.x + ", " + testEnemy.bullets[2].bpos.y + " flying " + testEnemy.bullets[2].v.x + ", " + testEnemy.bullets[2].v.y + "\n");
-  popMatrix();
-  
-  // fire effect
-  if (firing) {
-    fire = loadImage("sprites/fire" + int(fireAni/3) + ".png");
+    
+    // map
     pushMatrix();
-    if (ammo == 1) {
-      scale(1, -1);
-      if (ADS) {
-        translate(width/2, -height/2+35);
-      } else {
-        translate(width/2, -height/2+15);
-      }
-      if (ADS) {
-        if (tgt.x > width/2) {
-          rotate(-atan2(tgt.x - width/2, -tgt.y-30 + height/2) + PI/2 + 2*PI/180);
-        } else {
-          scale(-1, 1);
-          rotate(atan2(tgt.x - width/2, -tgt.y-30 + height/2) + PI/2 + 2*PI/180);
-        }
-      } else {
-        if (tgt.x > width/2) {
-          rotate(-atan2(tgt.x - width/2, -tgt.y-10 + height/2) + PI/2 + 2*PI/180);
-        } else {
-          scale(-1, 1);
-          rotate(atan2(tgt.x - width/2, -tgt.y-10 + height/2) + PI/2 + 2*PI/180);
-        }
-      }
-      image(fire, 50, -177);
+    translate(-pos.x, -pos.y);
+    if (pos.x > chunks*3840-1920) chunks += 1;
+    for (float x = 0; x < chunks; x++) {
+      image(road, x*3840, 0);
+    }
+    image(house, 537, -862);
+    image(barricade, 796, -30);
+    image(barricade, 803, 250);
+    image(barricade, 800, 570);
+    image(barricade, 797, 900);
+    popMatrix();
+    
+    //-242 -109 if possible
+    // troll matrix
+    pushMatrix();
+    if (tgt.x < width/2) {
+      scale(-1, 1);
+      translate(-width, 0);
+    }
+    imageMode(CENTER);
+    image(troll, width/2-15, height/2-5);
+    // gun matrix (inside troll matrix)
+    pushMatrix();
+    if (ADS) {
+      translate(width/2, height/2-20);
     } else {
-      if (ADS) {
-        translate(width/2, height/2-20);
+      translate(width/2, height/2);
+    }
+    
+    if (ADS) {
+      if (tgt.x > width/2) {
+        rotate(-atan2(tgt.x - width/2, tgt.y+30 - height/2) + 2*PI/180);
       } else {
-        translate(width/2, height/2);
+        rotate(atan2(tgt.x - width/2, tgt.y+30 - height/2) + 2*PI/180);
       }
-      if (ADS) {
-        if (tgt.x > width/2) {
-          rotate(-atan2(tgt.x - width/2, tgt.y+30 - height/2) + PI/2 + 2*PI/180);
-        } else {
-          scale(-1, 1);
-          rotate(atan2(tgt.x - width/2, tgt.y+30 - height/2) + PI/2 + 2*PI/180);
-        }
+    } else {
+      if (tgt.x > width/2) {
+        rotate(-atan2(tgt.x - width/2, tgt.y+10 - height/2) + 2*PI/180);
       } else {
-        if (tgt.x > width/2) {
-          rotate(-atan2(tgt.x - width/2, tgt.y+10 - height/2) + PI/2 + 2*PI/180);
-        } else {
-          scale(-1, 1);
-          rotate(atan2(tgt.x - width/2, tgt.y+10 - height/2) + PI/2 + 2*PI/180);
-        }
+        rotate(atan2(tgt.x - width/2, tgt.y+10 - height/2) + 2*PI/180);
       }
-      image(fire, 50, -177);
+    }
+    
+    image(gun, 0, 0);
+    popMatrix();
+    imageMode(CORNER);
+    popMatrix();
+    
+    // literally everything else
+    pushMatrix();
+    translate(-pos.x+width/2, -pos.y+height/2);
+    for (int i = 0; i < count; i++) {
+      enemies[i].display();
+      enemies[i].move(pos);
+      enemies[i].fire(pos);
+      for (int b = 0; b < 3; b++) {
+        enemies[i].bullets[b].fly();
+        enemies[i].bullets[b].display();
+      }
     }
     popMatrix();
-    fireAni += 1;
-    if (fireAni == 16) {
-      firing = false;
-      fireAni = 0;
+    
+    // ADS preview
+    pushMatrix();
+    translate(width/2, height/2-20);
+    rotate(-atan2(tgt.x - width/2, tgt.y+30 - height/2) + 92*PI/180);
+    imageMode(CENTER);
+    if (tgt.x < width/2) translate(0, 15);
+    if (ADS && !firing && lose == 0) image(preview, 375, -10);
+    imageMode(CORNER);
+    popMatrix();
+    
+    // firing
+    if (firing && lose == 0) {
+      fire = loadImage("sprites/fire" + int(fireAni/3) + ".png");
+      pushMatrix();
+      if (ammo == 1) {
+        scale(1, -1);
+        if (ADS) {
+          translate(width/2, -height/2+35);
+        } else {
+          translate(width/2, -height/2+15);
+        }
+        if (ADS) {
+          if (tgt.x > width/2) {
+            rotate(-atan2(tgt.x - width/2, -tgt.y-30 + height/2) + PI/2 + 2*PI/180);
+          } else {
+            scale(-1, 1);
+            rotate(atan2(tgt.x - width/2, -tgt.y-30 + height/2) + PI/2 + 2*PI/180);
+          }
+        } else {
+          if (tgt.x > width/2) {
+            rotate(-atan2(tgt.x - width/2, -tgt.y-10 + height/2) + PI/2 + 2*PI/180);
+          } else {
+            scale(-1, 1);
+            rotate(atan2(tgt.x - width/2, -tgt.y-10 + height/2) + PI/2 + 2*PI/180);
+          }
+        }
+        image(fire, 50, -177);
+      } else {
+        if (ADS) {
+          translate(width/2, height/2-20);
+        } else {
+          translate(width/2, height/2);
+        }
+        if (ADS) {
+          if (tgt.x > width/2) {
+            rotate(-atan2(tgt.x - width/2, tgt.y+30 - height/2) + PI/2 + 2*PI/180);
+          } else {
+            scale(-1, 1);
+            rotate(atan2(tgt.x - width/2, tgt.y+30 - height/2) + PI/2 + 2*PI/180);
+          }
+        } else {
+          if (tgt.x > width/2) {
+            rotate(-atan2(tgt.x - width/2, tgt.y+10 - height/2) + PI/2 + 2*PI/180);
+          } else {
+            scale(-1, 1);
+            rotate(atan2(tgt.x - width/2, tgt.y+10 - height/2) + PI/2 + 2*PI/180);
+          }
+        }
+        image(fire, 50, -177);
+      }
+      popMatrix();
+      fireAni += 1;
+      if (fireAni == 16) {
+        firing = false;
+        fireAni = 0;
+      }
+    } else if (lose == 0) {
+      walkCycle();
     }
-  } else {
-    walkCycle();
+    
+    //if (enemies[0] != null) println("enemy HP: " + enemies[0].HP);
+    
+    // hitscan
+    if (fireCD == 12) {
+      // OHKO check
+      for (int i = 0; i < count; i++) {
+        PVector aimDirection = new PVector(width/2-tgt.x, height/2-tgt.y);
+        PVector enemyDirection = new PVector(-enemies[i].epos.x+pos.x, -20-enemies[i].epos.y+pos.y);
+        //if (enemies[i].epos.x > pos.x) aimDirection.x = -aimDirection.x; 
+        if (dist(enemies[i].epos.x, enemies[i].epos.y, pos.x, pos.y) <= 333 && (abs(aimDirection.heading() - enemyDirection.heading()) <= 14*PI/180) || (abs(aimDirection.heading() - enemyDirection.heading()) >= 346*PI/180)) {
+          enemies[i].hit(2);
+        }
+      }
+    }
+    if (fireCD == 6) {
+      // 2HKO check
+      for (int i = 0; i < count; i++) {
+        PVector aimDirection = new PVector(width/2-tgt.x, height/2-tgt.y);
+        PVector enemyDirection = new PVector(-enemies[i].epos.x+pos.x, -20-enemies[i].epos.y+pos.y);
+        if (dist(enemies[i].epos.x, enemies[i].epos.y, pos.x, pos.y) <= 625 && abs(aimDirection.heading() - enemyDirection.heading()) <= 14*PI/180 || (abs(aimDirection.heading() - enemyDirection.heading()) >= 346*PI/180)) {
+          enemies[i].hit(1);
+        }
+      }
+    }
+    
+    for (int i = 0; i < count; i++) {
+      for (int b = 0; b < 3; b++) {
+        if (enemies[i].bullets[b].hit(pos)) {
+          lose = 1;
+        }
+      }
+    }
+    
+    // UI
+    imageMode(CENTER);
+    image(barrel, 693, 876);
+    pushMatrix();
+    // -54.6 +11.2
+    translate(693-54.9, 876+11.2);
+    rotate(rotation1);
+    if (ammo > 0) image(shell, 0, 0);
+    popMatrix();
+    pushMatrix();
+    // +51.9 +11.2
+    translate(693+51.9, 876+11.2);
+    rotate(rotation2);
+    if (ammo > 1) image(shell, 0, 0);
+    popMatrix();
+    imageMode(CORNER);
+    if (reload) {
+      gunUI = loadImage("sprites/open.png");
+    } else {
+      gunUI = loadImage("sprites/closed.png");
+    }
+    image(gunUI, 927, 759);
+    if (fireCD > 0) fireCD -= 1;
+    
+    image(flavour, 0, 0);
+    
+    // note to self loading a 1080p image every frame is not a very good idea
+    if(frameCount%300 == 0) flavourText = loadImage("sprites/flavour" + int(frameCount%900/300) + ".png");
+    image(flavourText, 0, 0);
+    portrait = loadImage("sprites/portrait" + expression + ".png");
+    image(portrait, 1529, 884);
+    if (duration != 0) {
+      duration -= 1;
+    } else if (reload && lose == 0) {
+      expression = 1;
+    } else if (ADS && lose == 0) {
+      expression = 4;
+    } else if (lose == 0){
+      expression = 0;
+    }
+    fill(#FEFFF5, muzzleFlash);
+    stroke(#FEFFF5, muzzleFlash);
+    if (lose == 0) rect(1528, 883, 373, 178);
+    if (muzzleFlash > 0) {
+      muzzleFlash -= dispersion;
+      dispersion += 1;
+    } else {
+      muzzleFlash = 0;
+      dispersion = 0;
+    }
+    
+    if (winCountdown > 0) {
+      winCountdown -= win;
+    } else {
+      gamestate = 3;
+    }
+    if (loseCountdown > 0) {
+      loseCountdown -= lose;
+      tint(255, loseCountdown*3);
+      imageMode(CENTER);
+      if (lose != 0) image(hitMarker, width/2, height/2);
+      tint(255, 255);
+      imageMode(CORNER);
+      fill(0, 255-loseCountdown*2);
+      stroke(0, 255-loseCountdown*2);
+      rect(0, 0, width, height);
+    } else {
+      gamestate = 4;
+    }
+  } else if (gamestate == 3) {
+  
+  } else if (gamestate == 4) {
+  
   }
   
-  // UI
-  imageMode(CENTER);
-  image(barrel, 693, 876);
-  pushMatrix();
-  // -54.6 +11.2
-  translate(693-54.9, 876+11.2);
-  rotate(rotation1);
-  if (ammo > 0) image(shell, 0, 0);
-  popMatrix();
-  pushMatrix();
-  // +51.9 +11.2
-  translate(693+51.9, 876+11.2);
-  rotate(rotation2);
-  if (ammo > 1) image(shell, 0, 0);
-  popMatrix();
-  imageMode(CORNER);
-  if (reload) {
-    gunUI = loadImage("sprites/open.png");
-  } else {
-    gunUI = loadImage("sprites/closed.png");
-  }
-  image(gunUI, 927, 759);
-  if (fireCD > 0) fireCD -= 1;
-  
-  image(flavour, 0, 0);
-  
-  // note to self loading a 1080p image every frame is not a very good idea
-  if(frameCount%300 == 0) flavourText = loadImage("sprites/flavour" + int(frameCount%900/300) + ".png");
-  image(flavourText, 0, 0);
-  portrait = loadImage("sprites/portrait" + expression + ".png");
-  image(portrait, 1529, 884);
-  if (duration != 0) {
-    duration -= 1;
-  } else if (reload) {
-    expression = 1;
-  } else if (ADS) {
-    expression = 4;
-  } else {
-    expression = 0;
-  }
-  fill(#FEFFF5, muzzleFlash);
-  stroke(#FEFFF5, muzzleFlash);
-  rect(1528, 883, 373, 178);
-  if (muzzleFlash > 0) {
-    muzzleFlash -= dispersion;
-    dispersion += 1;
-  } else {
-    muzzleFlash = 0;
-    dispersion = 0;
-  }
 }
 
 void keyPressed() {
@@ -299,6 +387,9 @@ void keyPressed() {
   }
   if (key == 'd') {
     right = true;
+  }
+  if (key == ' ') {
+    spawnEnemy(new PVector(pos.x -width/2+mouseX, pos.y-height/2+mouseY));
   }
 }
 
@@ -360,6 +451,7 @@ void walkCycle() {
   pos = nextFramePos;
 }
 
+// 333 is OHKO range, 625 is two hit, spread is 14 degrees
 void mousePressed() {
   if (mouseButton == 37) {
     /*
@@ -368,19 +460,20 @@ void mousePressed() {
     print("fire cooldown: " + fireCD + "\n");
     */
     //println(mouseX, mouseY);
-    if (reload) {
+    if (reload && lose == 0) {
       loadShell();
-    } else if (fireCD == 0 && ammo > 0) {
+    } else if (fireCD == 0 && ammo > 0 && lose == 0) {
       firing = true;
       fireCD = 15;
       ammo -= 1;
       muzzleFlash = 320;
       dispersion = 0;
     }
+    
   } else if (mouseButton == 39 && !reload) {
     ADS = true;
     held = true;
-    expression = 4;
+    if (lose == 0) expression = 4;
     duration = -1;
   }
 }
@@ -390,10 +483,10 @@ void mouseReleased() {
     ADS = false;
     held = false;
     if (reload) {
-      expression = 1;
+      if (lose == 0) expression = 1;
       duration = -1;
     } else {
-      expression = 0;
+      if (lose == 0) expression = 0;
       duration = 0;
     }
   }
@@ -403,12 +496,12 @@ void loadShell() {
   if (ammo == 0) {
     ammo += 1;
     rotation1 = random(0, 2*PI);
-    expression = 2;
+    if (lose == 0) expression = 2;
     duration = 30;
   } else if (ammo == 1) {
     ammo += 1;
     rotation2 = random(0, 2*PI);
-    expression = 3;
+    if (lose == 0) expression = 3;
     duration = 30;
   }
 }

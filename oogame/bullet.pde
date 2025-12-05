@@ -27,6 +27,6 @@ class bullet{
   void display() {
     fill(255);
     stroke(255, 0, 0);
-    ellipse(bpos.x, bpos.y, 10, 10);
+    if (active) ellipse(bpos.x, bpos.y, 10, 10);
   }
 }
