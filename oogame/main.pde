@@ -70,7 +70,11 @@ float tv = 0;
 int thp = 30;
 PVector truckHit = new PVector (-1000, -1000);
 int truckHitMarker = 0;
-float truckHitRotation = random(0, 2*PI);
+float truckHitRotation0 = random(0, 2*PI);
+float truckHitRotation1 = random(0, 2*PI);
+float truckHitRotation2 = random(0, 2*PI);
+PVector truckHitOffset1 = new PVector(random(-30, 30), random(-15, 15));
+PVector truckHitOffset2 = new PVector(random(-15, 15), random(-30, 30));
 float reinforcements = 1;
 int reinforcementCountdown = 240;
 int timer = 5400;
@@ -136,6 +140,7 @@ void draw() {
       }
     }
     
+    // could have probably optimized this but oh well
     troll = loadImage("sprites/troll" + sprite + ".png");
     if (reload) {
       gun = loadImage("sprites/gun_open.png");
@@ -162,8 +167,7 @@ void draw() {
     image(barricade, 797, 900);
     popMatrix();
     
-    //-242 -109 if possible
-    // troll matrix
+    // trollface matrix
     pushMatrix();
     if (tgt.x < width/2) {
       scale(-1, 1);
@@ -171,6 +175,7 @@ void draw() {
     }
     imageMode(CENTER);
     if (intro == 0) image(troll, width/2-15, height/2-5);
+    
     // gun matrix (inside troll matrix)
     pushMatrix();
     if (ADS) {
@@ -198,7 +203,7 @@ void draw() {
     imageMode(CORNER);
     popMatrix();
     
-    // literally everything else
+    // game objects
     pushMatrix();
     translate(-pos.x+width/2, -pos.y+height/2);
     for (int i = 0; i < count; i++) {
@@ -210,16 +215,35 @@ void draw() {
         enemies[i].bullets[b].display();
       }
     }
-    stroke(#FF0000);
     PVector hs = new PVector(tgt.x+-width/2, tgt.y+-height/2);
     hs.normalize().mult(625);
     image(truck, tpos, -300);
     tint(255, truckHitMarker);
     imageMode(CENTER);
     pushMatrix();
+    if (win != 0) {
+      truckHit = new PVector(tpos+125, -50);
+      if (truckHitMarker > 0) truckHitMarker-=4;
+      if (truckHitMarker == 0) {
+        truckHitMarker=320;
+        truckHitMarker = 320;
+        truckHitRotation0 = random(0, 2*PI);
+        truckHitRotation0 = random(0, 2*PI);
+        truckHitRotation0 = random(0, 2*PI);
+        truckHitOffset1 = new PVector(random(-125, 125), random(-125, 125));
+        truckHitOffset2 = new PVector(random(-62.5, 62.5), random(-250, 250));
+      }
+    }
     translate(truckHit.x, truckHit.y);
-    rotate(truckHitRotation);
-    image(critMarker, 0, 0);
+    rotate(truckHitRotation0);
+    if (win == 0) image(hitMarker, 0, 0);
+    if (win == 1) image(critMarker, truckHitOffset1.x + truckHitOffset2.x, truckHitOffset1.y + truckHitOffset2.y);
+    rotate(truckHitRotation1);
+    if (win == 0) image(hitMarker, truckHitOffset1.x, truckHitOffset1.y);
+    if (win == 1) image(critMarker, truckHitOffset1.x, truckHitOffset1.y);
+    rotate(truckHitRotation2);
+    if (win == 0) image(hitMarker, truckHitOffset2.x, truckHitOffset2.y);
+    if (win == 1) image(critMarker, truckHitOffset2.x, truckHitOffset2.y);
     popMatrix();
     imageMode(CORNER);
     if (truckHitMarker != 0) truckHitMarker-= 4;
@@ -230,7 +254,7 @@ void draw() {
     }
     tpos += tv;
     
-    // intro stuff
+    // intro cutscene
     imageMode(CENTER);
     if (intro > 150) {
       image(enemySprites[2], 230, -400);
@@ -334,10 +358,14 @@ void draw() {
       boolean hit = false;
       for (int i = 0; i < 625; i++) {
         if (!hit) {
-          if (pos.x+i*hitscan.x/625 > tpos+50 && pos.x+i*hitscan.x/625 < tpos+1134-50 && pos.y+i*hitscan.y/625 > -250 && pos.y+i*hitscan.y/625 < 200) {
+          if (pos.x+i*hitscan.x/625 > tpos+50 && pos.x+i*hitscan.x/625 < tpos+1134-50 && pos.y+i*hitscan.y/625 > -250 && pos.y+i*hitscan.y/625 < 200 && win == 0) {
             hit = true;
             truckHitMarker = 320;
-            truckHitRotation = random(0, 2*PI);
+            truckHitRotation0 = random(0, 2*PI);
+            truckHitRotation0 = random(0, 2*PI);
+            truckHitRotation0 = random(0, 2*PI);
+            truckHitOffset1 = new PVector(random(-100, 100), random(-50, 50));
+            truckHitOffset2 = new PVector(random(-50, 50), random(-100, 100));
             truckHit = new PVector(pos.x+i*hitscan.x/625, pos.y+i*hitscan.y/625);
             thp--;
           }
@@ -386,6 +414,8 @@ void draw() {
         image(arrow, -width, 0);
         popMatrix();
       }
+      
+      // game event progress bars
       stroke(255);
       noFill();
       rectMode(CORNERS);
@@ -414,7 +444,7 @@ void draw() {
       rect(224, 892, 217*reinforcementCountdown/(360+int(reinforcements*20)), 26);
   
       
-      // note to self loading a 1080p image every frame is not a very good idea
+      // live trollface reaction
       if(frameCount%300 == 0) flavourText = loadImage("sprites/flavour" + int(frameCount%900/300) + ".png");
       image(flavourText, 0, 0);
       portrait = loadImage("sprites/portrait" + expression + ".png");
@@ -547,12 +577,6 @@ void mousePressed() {
     if (mouseButton == 37 && !instructions) gamestate = 2;
   } else if (gamestate == 2 && intro == 0) {
     if (mouseButton == 37) {
-      /*
-      print("ammo: " + ammo + "\n");
-      print("attempting to fire...\n");
-      print("fire cooldown: " + fireCD + "\n");
-      */
-      //println(mouseX, mouseY);
       if (reload && lose == 0) {
         loadShell();
       } else if (fireCD == 0 && ammo > 0 && lose == 0) {
@@ -682,6 +706,7 @@ void loadShell() {
   }
 }
 
+// reset game data when replaying
 void reset() {
   ammo = 1;
   reload = false;
@@ -713,7 +738,11 @@ void reset() {
   thp = 30;
   truckHit = new PVector (-1000, -1000);
   truckHitMarker = 0;
-  truckHitRotation = random(0, 2*PI);
+  truckHitRotation0 = random(0, 2*PI);
+  truckHitRotation1 = random(0, 2*PI);
+  truckHitRotation2 = random(0, 2*PI);
+  truckHitOffset1 = new PVector(random(-30, 30), random(-15, 15));
+  truckHitOffset2 = new PVector(random(-15, 15), random(-30, 30));
   reinforcements = 1;
   reinforcementCountdown = 240;
   timer = 5400;

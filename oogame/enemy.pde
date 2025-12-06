@@ -61,6 +61,7 @@ class enemy {
       if (epos.y < -460) epos.y = -460;
       if (epos.y > 563) epos.y = 563;
       
+      // truck collision
       if (epos.x > tpos && epos.x < tpos + 1134 && epos.y > -320 && epos.y < 270) {
         if (abs(epos.x - tpos) < abs(epos.x - (tpos + 1134))) {
           if (abs(epos.y - -320) < abs (epos.y - 270)) {
@@ -111,6 +112,8 @@ class enemy {
       }
       image(enemyGun, 0, -20);
     } else {
+      
+      // knockout animation
       if (epos.x > pos.x) {
         scale (-1, 1);
       }
@@ -187,7 +190,7 @@ class enemy {
   
   void hit(int dmg) {
     HP -= dmg;
-    stun = 45;
+    stun = 20;
     if (dmg == 1 && HP + dmg > 0) {
       vfx = 255;
       crit = false;
