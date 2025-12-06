@@ -240,7 +240,7 @@ void draw() {
       translate(230, -460);
       rotate(PI/2);
       if (intro > 135) {
-        fire = loadImage("sprites/fire" + int((15-(intro-135))/3) + ".png");
+        fire = loadImage("sprites/fire0" + int((15-(intro-135))/3) + ".png");
         image(fire, 150, 0);
       }
       popMatrix();
@@ -267,54 +267,31 @@ void draw() {
     
     // firing
     if (firing && lose == 0) {
-      fire = loadImage("sprites/fire" + int(fireAni/3) + ".png");
+      fire = loadImage("sprites/fire" + (ammo%2) + int(fireAni/3) + ".png");
       pushMatrix();
-      if (ammo == 1) {
-        scale(1, -1);
-        if (ADS) {
-          translate(width/2, -height/2+35);
-        } else {
-          translate(width/2, -height/2+15);
-        }
-        if (ADS) {
-          if (tgt.x > width/2) {
-            rotate(-atan2(tgt.x - width/2, -tgt.y-30 + height/2) + PI/2 + 2*PI/180);
-          } else {
-            scale(-1, 1);
-            rotate(atan2(tgt.x - width/2, -tgt.y-30 + height/2) + PI/2 + 2*PI/180);
-          }
-        } else {
-          if (tgt.x > width/2) {
-            rotate(-atan2(tgt.x - width/2, -tgt.y-10 + height/2) + PI/2 + 2*PI/180);
-          } else {
-            scale(-1, 1);
-            rotate(atan2(tgt.x - width/2, -tgt.y-10 + height/2) + PI/2 + 2*PI/180);
-          }
-        }
-        image(fire, 50, -177);
+      if (ADS) {
+        translate(width/2, height/2-20);
       } else {
-        if (ADS) {
-          translate(width/2, height/2-20);
-        } else {
-          translate(width/2, height/2);
-        }
-        if (ADS) {
-          if (tgt.x > width/2) {
-            rotate(-atan2(tgt.x - width/2, tgt.y+30 - height/2) + PI/2 + 2*PI/180);
-          } else {
-            scale(-1, 1);
-            rotate(atan2(tgt.x - width/2, tgt.y+30 - height/2) + PI/2 + 2*PI/180);
-          }
-        } else {
-          if (tgt.x > width/2) {
-            rotate(-atan2(tgt.x - width/2, tgt.y+10 - height/2) + PI/2 + 2*PI/180);
-          } else {
-            scale(-1, 1);
-            rotate(atan2(tgt.x - width/2, tgt.y+10 - height/2) + PI/2 + 2*PI/180);
-          }
-        }
-        image(fire, 50, -177);
+        translate(width/2, height/2);
       }
+      if (ADS) {
+        if (tgt.x > width/2) {
+          rotate(-atan2(tgt.x - width/2, tgt.y+30 - height/2) + PI/2 + 2*PI/180);
+        } else {
+          scale(-1, 1);
+          rotate(atan2(tgt.x - width/2, tgt.y+30 - height/2) + PI/2 + 2*PI/180);
+        }
+      } else {
+        if (tgt.x > width/2) {
+          rotate(-atan2(tgt.x - width/2, tgt.y+10 - height/2) + PI/2 + 2*PI/180);
+        } else {
+          scale(-1, 1);
+          rotate(atan2(tgt.x - width/2, tgt.y+10 - height/2) + PI/2 + 2*PI/180);
+        }
+      }
+      if (ammo == 1) rotate(-4*PI/180);
+      image(fire, 50, -177);
+      
       popMatrix();
       fireAni += 1;
       if (fireAni == 16) {
