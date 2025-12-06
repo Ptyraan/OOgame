@@ -1,19 +1,19 @@
-int gamestate = 2;
+int gamestate = 0;
 int winCountdown = 300;
 int loseCountdown = 120;
 int win = 0;
 int lose = 0;
+int intro = 300;
 /* gamestate index
  0 menu
- 1 instructions
+ 1 unused
  2 game
  3 win
  4 lose
 */
 
-int lives = 3;
-int ammo = 2;
-boolean reload = true;
+int ammo = 1;
+boolean reload = false;
 boolean ADS = false;
 boolean held = false;
 PVector pos = new PVector(230, -460);
@@ -62,6 +62,8 @@ PImage[] enemySprites = new PImage[3];
 PImage enemyGun;
 PImage critMarker;
 PImage hitMarker;
+PImage KO;
+PImage helmet;
 PImage truck;
 int tpos = 300;
 float tv = 0;
@@ -75,6 +77,9 @@ int timer = 5400;
 
 PImage W;
 PImage L;
+PImage menu;
+PImage guide;
+boolean instructions = true;
 int blackScreen = 255;
 
 int chunks = 1;
@@ -99,22 +104,25 @@ void setup() {
     
   }
   enemyGun = loadImage("sprites/enemygun.png");
+  KO = loadImage("sprites/KO.png");
+  helmet = loadImage("sprites/helmet.png");
   preview = loadImage("sprites/ADS.png");
   critMarker = loadImage("sprites/critmarker.png");
   hitMarker = loadImage("sprites/hitmarker.png");
   W = loadImage("sprites/victory.png");
   L = loadImage("sprites/gameover.png");
+  menu = loadImage("sprites/menu.png");
+  guide = loadImage("sprites/instructions.png");
   truck = loadImage("sprites/truck.png");
 }
 
 
 void draw() {
+  background(#060B34);
   if (gamestate == 0) {
-  
-  } else if (gamestate == 1) {
-  
-  } else if (gamestate == 2) {
-    background(#060B34);
+    image(menu, 0, 0);
+    if (instructions) image(guide, 0, 0);
+  } else if (gamestate == 1 || gamestate == 2) {
     if (sprite > 1) sprite -= 2;
     if (sprite < 0) sprite = 0;
     // inconsistent input gets it out of bounds, this is the more efficient fix
@@ -134,6 +142,11 @@ void draw() {
     } else {
       gun = loadImage("sprites/gun.png");
     }
+    
+    // intro cutscene matrix push
+    pushMatrix();
+    translate(0, 2*intro);
+
     
     // map
     pushMatrix();
@@ -157,7 +170,7 @@ void draw() {
       translate(-width, 0);
     }
     imageMode(CENTER);
-    image(troll, width/2-15, height/2-5);
+    if (intro == 0) image(troll, width/2-15, height/2-5);
     // gun matrix (inside troll matrix)
     pushMatrix();
     if (ADS) {
@@ -180,7 +193,7 @@ void draw() {
       }
     }
     
-    image(gun, 0, 0);
+    if (intro == 0) image(gun, 0, 0);
     popMatrix();
     imageMode(CORNER);
     popMatrix();
@@ -211,13 +224,36 @@ void draw() {
     imageMode(CORNER);
     if (truckHitMarker != 0) truckHitMarker-= 4;
     tint(255, 255);
-    if (tv < 2) {
+    if (tv < 2 && intro == 0) {
       tv += 0.01;
       if (tv > 2) tv = 2;
     }
     tpos += tv;
-    popMatrix();
     
+    // intro stuff
+    imageMode(CENTER);
+    if (intro > 150) {
+      image(enemySprites[2], 230, -400);
+      image(enemyGun, 230, -420);
+    } else if (intro <= 150) {
+      pushMatrix();
+      translate(230, -460);
+      rotate(PI/2);
+      if (intro > 135) {
+        fire = loadImage("sprites/fire" + int((15-(intro-135))/3) + ".png");
+        image(fire, 150, 0);
+      }
+      popMatrix();
+      image(KO, 230, -400 + 20*(150-intro));
+      image(helmet, 230 + 2*(150-intro), -400 + 18*(150-intro));
+      image(gun, 230 - 2*(150-intro), -420 + 24*(150-intro));
+    }
+    imageMode(CORNER);
+    popMatrix();    
+    
+    // intro cutscene matrix pop
+    popMatrix();
+    if (intro > 0) intro--;
     
     // ADS preview
     pushMatrix();
@@ -314,14 +350,14 @@ void draw() {
       }
     }
     
-    if (fireCD == 9) {
+    if (fireCD == 9 && thp > 0) {
       //truck hit check
       PVector hitscan = new PVector(tgt.x+-width/2, tgt.y+-height/2);
       hitscan.normalize().mult(625);
       boolean hit = false;
       for (int i = 0; i < 625; i++) {
         if (!hit) {
-          if (pos.x+i*hitscan.x/625 > tpos+50 && pos.x+i*hitscan.x/625 < tpos+1134-50 && pos.y+i*hitscan.y/625 > -300+50 && pos.y+i*hitscan.y/625 < 250-50) {
+          if (pos.x+i*hitscan.x/625 > tpos+50 && pos.x+i*hitscan.x/625 < tpos+1134-50 && pos.y+i*hitscan.y/625 > -250 && pos.y+i*hitscan.y/625 < 200) {
             hit = true;
             truckHitMarker = 320;
             truckHitRotation = random(0, 2*PI);
@@ -334,6 +370,7 @@ void draw() {
     
     for (int i = 0; i < count; i++) {
       for (int b = 0; b < 3; b++) {
+        if (win != 0) enemies[i].bullets[b].deactivate();
         if (enemies[i].bullets[b].hit(pos)) {
           lose = 1;
         }
@@ -341,110 +378,125 @@ void draw() {
     }
     
     // UI
-    imageMode(CENTER);
-    image(barrel, 693, 876);
-    pushMatrix();
-    // -54.6 +11.2
-    translate(693-54.9, 876+11.2);
-    rotate(rotation1);
-    if (ammo > 0) image(shell, 0, 0);
-    popMatrix();
-    pushMatrix();
-    // +51.9 +11.2
-    translate(693+51.9, 876+11.2);
-    rotate(rotation2);
-    if (ammo > 1) image(shell, 0, 0);
-    popMatrix();
-    imageMode(CORNER);
-    if (reload) {
-      gunUI = loadImage("sprites/open.png");
-    } else {
-      gunUI = loadImage("sprites/closed.png");
-    }
-    image(gunUI, 927, 759);
-    if (fireCD > 0) fireCD -= 1;
-    image(flavour, 0, 0);
-    if (tpos - pos.x > 1000) image(arrow, 0, 0);
-    if (pos.x - tpos > 2100) {
-      pushMatrix();
-      scale(-1, 1);
-      image(arrow, -width, 0);
-      popMatrix();
-    }
-    stroke(255);
-    noFill();
-    rectMode(CORNERS);
-    rect(222, 822, 443, 852);
-    rect(222, 856, 443, 886);
-    rect(222, 890, 443, 920);
-    fill(255);
-    rectMode(CORNER);
-    rect(224, 824, thp*217/30, 26);
-    if (timer == 0) {
-      lose = 1;
-    } else {
-      timer--;
-    }
-    rect(224, 858, 217*timer/5400, 26);
-    if (reinforcementCountdown != 0) {
-      reinforcementCountdown--;
-    } else {
-      println(reinforcements);
-      if (reinforcements < 5) reinforcements += 0.34;
-      for (int i = 0; i < reinforcements; i++) {
-        float r = random(0, 2*PI);
-        spawnEnemy(new PVector(pos.x+random(500, 600)*cos(r), pos.y+random(500, 600)*sin(r)));
-      }
-      reinforcementCountdown = 360+int(reinforcements*20);
-    }
-    rect(224, 892, 217*reinforcementCountdown/(360+int(reinforcements*20)), 26);
-
-    
-    // note to self loading a 1080p image every frame is not a very good idea
-    if(frameCount%300 == 0) flavourText = loadImage("sprites/flavour" + int(frameCount%900/300) + ".png");
-    image(flavourText, 0, 0);
-    portrait = loadImage("sprites/portrait" + expression + ".png");
-    image(portrait, 1529, 884);
-    if (duration != 0) {
-      duration -= 1;
-    } else if (reload && lose == 0) {
-      expression = 1;
-    } else if (ADS && lose == 0) {
-      expression = 4;
-    } else if (lose == 0){
-      expression = 0;
-    }
-    fill(#FEFFF5, muzzleFlash);
-    stroke(#FEFFF5, muzzleFlash);
-    if (lose == 0) rect(1528, 883, 373, 178);
-    if (muzzleFlash > 0) {
-      muzzleFlash -= dispersion;
-      dispersion += 1;
-    } else {
-      muzzleFlash = 0;
-      dispersion = 0;
-    }
-    
-    if (winCountdown > 0) {
-      winCountdown -= win;
-    } else {
-      gamestate = 3;
-    }
-    if (loseCountdown > 0) {
-      loseCountdown -= lose;
-      tint(255, loseCountdown*3);
+    if (intro == 0) {
       imageMode(CENTER);
-      if (lose != 0) image(hitMarker, width/2, height/2);
-      tint(255, 255);
+      image(barrel, 693, 876);
+      pushMatrix();
+      // -54.6 +11.2
+      translate(693-54.9, 876+11.2);
+      rotate(rotation1);
+      if (ammo > 0) image(shell, 0, 0);
+      popMatrix();
+      pushMatrix();
+      // +51.9 +11.2
+      translate(693+51.9, 876+11.2);
+      rotate(rotation2);
+      if (ammo > 1) image(shell, 0, 0);
+      popMatrix();
       imageMode(CORNER);
-      fill(0, 255-loseCountdown*2);
-      stroke(0, 255-loseCountdown*2);
-      rect(0, 0, width, height);
-    } else {
-      gamestate = 4;
+      if (reload) {
+        gunUI = loadImage("sprites/open.png");
+      } else {
+        gunUI = loadImage("sprites/closed.png");
+      }
+      image(gunUI, 927, 759);
+      if (fireCD > 0) fireCD -= 1;
+      image(flavour, 0, 0);
+      if (tpos - pos.x > 1000) image(arrow, 0, 0);
+      if (pos.x - tpos > 2100) {
+        pushMatrix();
+        scale(-1, 1);
+        image(arrow, -width, 0);
+        popMatrix();
+      }
+      stroke(255);
+      noFill();
+      rectMode(CORNERS);
+      rect(222, 822, 443, 852);
+      rect(222, 856, 443, 886);
+      rect(222, 890, 443, 920);
+      fill(255);
+      rectMode(CORNER);
+      rect(224, 824, thp*217/30, 26);
+      if (timer == 0) {
+        lose = 1;
+      } else {
+        timer--;
+      }
+      rect(224, 858, 217*timer/5400, 26);
+      if (reinforcementCountdown != 0) {
+        reinforcementCountdown--;
+      } else {
+        if (reinforcements < 5) reinforcements += 0.34;
+        for (int i = 0; i < reinforcements; i++) {
+          float r = random(0, 2*PI);
+          spawnEnemy(new PVector(pos.x+random(500, 600)*cos(r), pos.y+random(500, 600)*sin(r)));
+        }
+        reinforcementCountdown = 360+int(reinforcements*20);
+      }
+      rect(224, 892, 217*reinforcementCountdown/(360+int(reinforcements*20)), 26);
+  
+      
+      // note to self loading a 1080p image every frame is not a very good idea
+      if(frameCount%300 == 0) flavourText = loadImage("sprites/flavour" + int(frameCount%900/300) + ".png");
+      image(flavourText, 0, 0);
+      portrait = loadImage("sprites/portrait" + expression + ".png");
+      image(portrait, 1529, 884);
+      if (duration != 0) {
+        duration -= 1;
+      } else if (reload && lose == 0) {
+        expression = 1;
+      } else if (ADS && lose == 0) {
+        expression = 4;
+      } else if (lose == 0){
+        expression = 0;
+      }
+      fill(#FEFFF5, muzzleFlash);
+      stroke(#FEFFF5, muzzleFlash);
+      if (lose == 0) rect(1528, 883, 373, 178);
+      if (muzzleFlash > 0) {
+        muzzleFlash -= dispersion;
+        dispersion += 1;
+      } else {
+        muzzleFlash = 0;
+        dispersion = 0;
+      }
+      
+      if (thp == 0) {
+        win = 1;
+      }
+      if (winCountdown > 0) {
+        winCountdown -= win;
+        // explosion
+        
+        fill(255, 255-winCountdown);
+        stroke(255, 255-winCountdown);
+        rect(0, 0, width, height);
+      } else {
+        gamestate = 3;
+      }
+      if (loseCountdown > 0) {
+        loseCountdown -= lose;
+        tint(255, loseCountdown*3);
+        imageMode(CENTER);
+        if (lose != 0) image(hitMarker, width/2, height/2);
+        tint(255, 255);
+        imageMode(CORNER);
+        fill(0, 255-loseCountdown*2);
+        stroke(0, 255-loseCountdown*2);
+        rect(0, 0, width, height);
+      } else {
+        gamestate = 4;
+      }
     }
   } else if (gamestate == 3) {
-
+    winCountdown = 300;
+    win = 0;
+    image(W, 0, 0);
+    if(blackScreen > 0) blackScreen -= 5;
+    stroke(255, blackScreen);
+    fill(255, blackScreen);
+    rect(0, 0, width, height);
   } else if (gamestate == 4) {
     loseCountdown = 120;
     lose = 0;
@@ -458,7 +510,9 @@ void draw() {
 }
 
 void keyPressed() {
-  if (gamestate == 2) {
+  if (gamestate == 0) {
+    if (!instructions) gamestate = 2;
+  } else if(gamestate == 2 && intro == 0) {
     if (key == 'r') {
       reload = !reload;
       if (reload) {
@@ -493,7 +547,7 @@ void keyPressed() {
 }
 
 void keyReleased() {
-  if (gamestate == 2) {
+  if (gamestate == 2 && intro == 0) {
     if (key == 'w') {
       up = false;
     }
@@ -505,6 +559,57 @@ void keyReleased() {
     }
     if (key == 'd') {
       right = false;
+    }
+  }
+}
+
+// 333 is OHKO range, 625 is two hit, spread is 14 degrees
+void mousePressed() {
+  if (gamestate == 0) {
+    if (mouseButton == 39) instructions = !instructions;
+    if (mouseButton == 37 && !instructions) gamestate = 2;
+  } else if (gamestate == 2 && intro == 0) {
+    if (mouseButton == 37) {
+      /*
+      print("ammo: " + ammo + "\n");
+      print("attempting to fire...\n");
+      print("fire cooldown: " + fireCD + "\n");
+      */
+      //println(mouseX, mouseY);
+      if (reload && lose == 0) {
+        loadShell();
+      } else if (fireCD == 0 && ammo > 0 && lose == 0) {
+        firing = true;
+        fireCD = 15;
+        ammo -= 1;
+        muzzleFlash = 320;
+        dispersion = 0;
+      }
+      
+    } else if (mouseButton == 39 && !reload) {
+      ADS = true;
+      held = true;
+      if (lose == 0) expression = 4;
+      duration = -1;
+    }
+  } else if (gamestate == 3 || gamestate == 4) {
+    blackScreen = 255;
+    reset();
+    if (mouseButton == 37) gamestate = 2;
+    if (mouseButton == 39) gamestate = 0;
+  }
+}
+
+void mouseReleased() {
+  if (mouseButton == 39) {
+    ADS = false;
+    held = false;
+    if (reload) {
+      if (lose == 0) expression = 1;
+      duration = -1;
+    } else {
+      if (lose == 0) expression = 0;
+      duration = 0;
     }
   }
 }
@@ -586,59 +691,6 @@ void walkCycle() {
   pos = nextFramePos;
 }
 
-// 333 is OHKO range, 625 is two hit, spread is 14 degrees
-void mousePressed() {
-  if (gamestate == 0) {
-  
-  } else if (gamestate == 1) {
-  
-  } else if (gamestate == 2) {
-    if (mouseButton == 37) {
-      /*
-      print("ammo: " + ammo + "\n");
-      print("attempting to fire...\n");
-      print("fire cooldown: " + fireCD + "\n");
-      */
-      //println(mouseX, mouseY);
-      if (reload && lose == 0) {
-        loadShell();
-      } else if (fireCD == 0 && ammo > 0 && lose == 0) {
-        firing = true;
-        fireCD = 15;
-        ammo -= 1;
-        muzzleFlash = 320;
-        dispersion = 0;
-      }
-      
-    } else if (mouseButton == 39 && !reload) {
-      ADS = true;
-      held = true;
-      if (lose == 0) expression = 4;
-      duration = -1;
-    }
-  } else if (gamestate == 3) {
-    
-  } else if (gamestate == 4) {
-    blackScreen = 255;
-    if (mouseButton == 37) gamestate = 2;
-    if (mouseButton == 39) gamestate = 0;
-  }
-}
-
-void mouseReleased() {
-  if (mouseButton == 39) {
-    ADS = false;
-    held = false;
-    if (reload) {
-      if (lose == 0) expression = 1;
-      duration = -1;
-    } else {
-      if (lose == 0) expression = 0;
-      duration = 0;
-    }
-  }
-}
-
 void loadShell() {
   if (ammo == 0) {
     ammo += 1;
@@ -651,4 +703,48 @@ void loadShell() {
     if (lose == 0) expression = 3;
     duration = 30;
   }
+}
+
+void reset() {
+  ammo = 1;
+  reload = false;
+  ADS = false;
+  held = false;
+  pos = new PVector(230, -460);
+  speed = 5;
+
+  up = false;
+  down = false;
+  left = false;
+  right = false;
+
+  sprite = 1;
+  animateBy = 7;
+  walking = false;
+  legDirection = 1;
+  firing = false;
+  fireAni = 0;
+  fireCD = 0;
+  rotation1 = random(0, 2*PI);
+  rotation2 = random(0, 2*PI);
+  expression = 0;
+  muzzleFlash = 0;
+  dispersion = 0;
+  
+  tpos = 300;
+  tv = 0;
+  thp = 30;
+  truckHit = new PVector (-1000, -1000);
+  truckHitMarker = 0;
+  truckHitRotation = random(0, 2*PI);
+  reinforcements = 1;
+  reinforcementCountdown = 240;
+  timer = 5400;
+
+  blackScreen = 255;
+  intro = 300;
+
+  chunks = 1;
+  count = 0;
+  enemies = new enemy[999];
 }

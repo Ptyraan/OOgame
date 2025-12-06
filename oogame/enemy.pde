@@ -11,6 +11,10 @@ class enemy {
   float r;
   boolean crit;
   PImage esprite;
+  PVector KOdirection;
+  PVector KOvector;
+  PVector Gunvector;
+  PVector Helmetvector;
   bullet[] bullets = new bullet[3];
   
   enemy(PVector tpos) {
@@ -25,6 +29,10 @@ class enemy {
     crit = false;
     r = random(0, 2*PI);
     offset = int(random(0, 60));
+    KOdirection = new PVector(0, 0);
+    KOvector = new PVector(0, 0);
+    Gunvector = new PVector(0, 0);
+    Helmetvector = new PVector(0, 0);
     for (int i = 0; i < 3; i++) {
       bullets[i] = new bullet(epos, new PVector(0, 0));
       bullets[i].deactivate();
@@ -89,24 +97,47 @@ class enemy {
   }
   
   void display() {
+    imageMode(CENTER);
+    pushMatrix();
+    translate(epos.x, epos.y);
+    if (epos.x > pos.x) {
+      scale (-1, 1);
+    }
     if (HP > 0) {
-      imageMode(CENTER);
-      pushMatrix();
-      translate(epos.x, epos.y);
-      if (epos.x > pos.x) {
-        scale (-1, 1);
-      }
-      if(esprite != null) image(esprite, 0, 0);
+      if (esprite != null) image(esprite, 0, 0);
       if(wait < -1) {
         rotate(15*PI/180);
         translate(0, 15);
       }
       image(enemyGun, 0, -20);
-  
+    } else {
+      if (epos.x > pos.x) {
+        scale (-1, 1);
+      }
+      KOvector.x += 15*KOdirection.x;
+      Gunvector.x += 13*KOdirection.x;
+      Helmetvector.x += 14*KOdirection.x;
+      KOvector.y += 15*KOdirection.y;
+      Gunvector.y += 13*KOdirection.y;
+      Helmetvector.y += 18*KOdirection.y;
+      
+      pushMatrix();
+      translate(KOvector.x, KOvector.y);
+      if (KO != null) image(KO, 0, 0);
+      popMatrix();
+      pushMatrix();
+      translate(Helmetvector.x, Helmetvector.y);
+      if (helmet != null) image(helmet, 0, 0);
+      popMatrix();
+      pushMatrix();
+      translate(Gunvector.x, Gunvector.y);
+      if (enemyGun != null) image(enemyGun, 0, 0);
       popMatrix();
 
-      imageMode(CORNER);
     }
+    popMatrix();
+
+    imageMode(CORNER);
     pushMatrix();
     translate(epos.x, epos.y);
     tint(255, vfx);
@@ -166,6 +197,10 @@ class enemy {
       vfx = 320;
       crit = true;
       r = random(0, 2*PI);
+    }
+    if (HP <= 0) {
+      KOdirection = new PVector(epos.x - pos.x, epos.y - pos.y);
+      KOdirection.normalize();
     }
   }
   

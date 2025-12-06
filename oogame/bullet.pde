@@ -10,6 +10,7 @@ class bullet{
   
   void fly() {
     bpos = new PVector(bpos.x+v.x, bpos.y+v.y);
+    if (bpos.x > tpos+50 && bpos.x < tpos+1134-50 && bpos.y > -250 && bpos.y < 200) active = false;
   }
   
   boolean hit(PVector tgt) {
