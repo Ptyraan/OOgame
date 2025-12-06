@@ -174,9 +174,11 @@ class enemy {
           PVector aim = new PVector(tgt.x - epos.x, tgt.y - epos.y - 20);
           if (tgt.x < epos.x) {
             bullets[shot] = new bullet(new PVector(epos.x-30, epos.y-20), aim.normalize().mult(6));
+            pew.play();
             shot +=1;
           } else if (tgt.x > epos.x) {
             bullets[shot] = new bullet(new PVector(epos.x+30, epos.y-20), aim.normalize().mult(6));
+            pew.play();
             shot +=1;
           }
         } else if (shot == 3) {

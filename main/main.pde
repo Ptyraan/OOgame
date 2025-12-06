@@ -1,3 +1,5 @@
+import processing.sound.*;
+
 int gamestate = 0;
 int winCountdown = 300;
 int loseCountdown = 120;
@@ -90,6 +92,19 @@ int chunks = 1;
 int count = 0;
 enemy[] enemies = new enemy[999];
 
+SoundFile bgm;
+SoundFile shotgun;
+SoundFile load;
+SoundFile hit;
+SoundFile casing;
+SoundFile blast;
+SoundFile explode;
+SoundFile pew;
+SoundFile reverse;
+int shell2delay = 20;
+int casings = 1;
+boolean connect = false;
+
 void setup() {
   size(1920, 1080, P2D);
   pixelDensity(1);
@@ -118,6 +133,17 @@ void setup() {
   menu = loadImage("sprites/menu.png");
   guide = loadImage("sprites/instructions.png");
   truck = loadImage("sprites/truck.png");
+  
+  bgm = new SoundFile(this, "sounds/bgm.mp3");
+  shotgun = new SoundFile(this, "sounds/break.mp3");
+  load = new SoundFile(this, "sounds/load.mp3");
+  blast = new SoundFile(this, "sounds/fire.mp3");
+  hit = new SoundFile(this, "sounds/hit.mp3");
+  casing = new SoundFile(this, "sounds/shell.mp3");
+  explode = new SoundFile(this, "sounds/explosion.mp3");
+  pew = new SoundFile(this, "sounds/pew.mp3");
+  reverse = new SoundFile(this, "sounds/reverse.mp3");
+  casing.amp(0.5);
 }
 
 
@@ -127,6 +153,7 @@ void draw() {
     image(menu, 0, 0);
     if (instructions) image(guide, 0, 0);
   } else if (gamestate == 1 || gamestate == 2) {
+    connect = false;
     if (sprite > 1) sprite -= 2;
     if (sprite < 0) sprite = 0;
     // inconsistent input gets it out of bounds, this is the more efficient fix
@@ -225,6 +252,7 @@ void draw() {
       truckHit = new PVector(tpos+125, -50);
       if (truckHitMarker > 0) truckHitMarker-=4;
       if (truckHitMarker == 0) {
+        explode.play();
         truckHitMarker=320;
         truckHitMarker = 320;
         truckHitRotation0 = random(0, 2*PI);
@@ -266,6 +294,9 @@ void draw() {
       if (intro > 135) {
         fire = loadImage("sprites/fire0" + int((15-(intro-135))/3) + ".png");
         image(fire, 150, 0);
+      }
+      if (intro == 150) {
+        blast.play();
       }
       popMatrix();
       image(KO, 230, -400 + 20*(150-intro));
@@ -329,7 +360,7 @@ void draw() {
     //if (enemies[0] != null) println("enemy HP: " + enemies[0].HP);
     
     // hitscan
-    if (fireCD == 12) {
+    if (fireCD == 15) {
       // OHKO check
       for (int i = 0; i < count; i++) {
         PVector aimDirection = new PVector(width/2-tgt.x, height/2-tgt.y);
@@ -337,21 +368,23 @@ void draw() {
         //if (enemies[i].epos.x > pos.x) aimDirection.x = -aimDirection.x; 
         if (dist(enemies[i].epos.x, enemies[i].epos.y, pos.x, pos.y) <= 333 && (abs(aimDirection.heading() - enemyDirection.heading()) <= 14*PI/180) || (abs(aimDirection.heading() - enemyDirection.heading()) >= 346*PI/180)) {
           enemies[i].hit(2);
+          connect = true;
         }
       }
     }
-    if (fireCD == 6) {
+    if (fireCD == 15) {
       // 2HKO check
       for (int i = 0; i < count; i++) {
         PVector aimDirection = new PVector(width/2-tgt.x, height/2-tgt.y);
         PVector enemyDirection = new PVector(-enemies[i].epos.x+pos.x, -20-enemies[i].epos.y+pos.y);
         if (dist(enemies[i].epos.x, enemies[i].epos.y, pos.x, pos.y) <= 625 && abs(aimDirection.heading() - enemyDirection.heading()) <= 14*PI/180 || (abs(aimDirection.heading() - enemyDirection.heading()) >= 346*PI/180)) {
           enemies[i].hit(1);
+          connect = true;
         }
       }
     }
     
-    if (fireCD == 9 && thp > 0) {
+    if (fireCD == 15 && thp > 0) {
       //truck hit check
       PVector hitscan = new PVector(tgt.x+-width/2, tgt.y+-height/2);
       hitscan.normalize().mult(625);
@@ -368,6 +401,7 @@ void draw() {
             truckHitOffset2 = new PVector(random(-50, 50), random(-100, 100));
             truckHit = new PVector(pos.x+i*hitscan.x/625, pos.y+i*hitscan.y/625);
             thp--;
+            connect = true;
           }
         }
       }
@@ -378,6 +412,7 @@ void draw() {
         if (win != 0) enemies[i].bullets[b].deactivate();
         if (enemies[i].bullets[b].hit(pos)) {
           lose = 1;
+          hit.play();
         }
       }
     }
@@ -468,14 +503,15 @@ void draw() {
         muzzleFlash = 0;
         dispersion = 0;
       }
+      shell2delay--;
+      if (shell2delay == 0) casing.play();
+      if (connect) hit.play();
       
       if (thp == 0) {
         win = 1;
       }
       if (winCountdown > 0) {
-        winCountdown -= win;
-        // explosion
-        
+        winCountdown -= win;        
         fill(255, 255-winCountdown);
         stroke(255, 255-winCountdown);
         rect(0, 0, width, height);
@@ -497,6 +533,7 @@ void draw() {
       }
     }
   } else if (gamestate == 3) {
+    bgm.stop();
     winCountdown = 300;
     win = 0;
     image(W, 0, 0);
@@ -505,6 +542,7 @@ void draw() {
     fill(255, blackScreen);
     rect(0, 0, width, height);
   } else if (gamestate == 4) {
+    bgm.stop();
     loseCountdown = 120;
     lose = 0;
     image(L, 0, 0);
@@ -521,6 +559,15 @@ void keyPressed() {
     if (!instructions) gamestate = 2;
   } else if(gamestate == 2 && intro == 0) {
     if (key == 'r') {
+      shotgun.play();
+      if (casings == 2 && reload) {
+        casings = 0;
+        casing.play();
+        shell2delay = 20;
+      } else if (casings == 1 && reload) {
+        casings = 0;
+        casing.play();
+      }
       reload = !reload;
       if (reload) {
         ADS = false;
@@ -574,17 +621,23 @@ void keyReleased() {
 void mousePressed() {
   if (gamestate == 0) {
     if (mouseButton == 39) instructions = !instructions;
-    if (mouseButton == 37 && !instructions) gamestate = 2;
+    if (mouseButton == 37 && !instructions) {
+      gamestate = 2;
+      bgm.play();
+    }
   } else if (gamestate == 2 && intro == 0) {
     if (mouseButton == 37) {
       if (reload && lose == 0) {
         loadShell();
+        load.play();
       } else if (fireCD == 0 && ammo > 0 && lose == 0) {
         firing = true;
         fireCD = 15;
         ammo -= 1;
         muzzleFlash = 320;
         dispersion = 0;
+        blast.play();
+        casings += 1;
       }
       
     } else if (mouseButton == 39 && !reload) {
@@ -596,7 +649,10 @@ void mousePressed() {
   } else if (gamestate == 3 || gamestate == 4) {
     blackScreen = 255;
     reset();
-    if (mouseButton == 37) gamestate = 2;
+    if (mouseButton == 37) {
+      gamestate = 2;
+      bgm.play();
+    }
     if (mouseButton == 39) gamestate = 0;
   }
 }
@@ -753,4 +809,7 @@ void reset() {
   chunks = 1;
   count = 0;
   enemies = new enemy[999];
+  shell2delay = 20;
+  casings = 1;
+  connect = false;
 }
